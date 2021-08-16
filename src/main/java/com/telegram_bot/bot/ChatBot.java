@@ -1,6 +1,9 @@
 package com.telegram_bot.bot;
 
 
+import com.telegram_bot.Service.ReplyKeyBoardMarkupService;
+import com.telegram_bot.Service.SendInlineKeyBoardMessageService;
+import com.telegram_bot.Service.SendStateMessageService;
 import com.telegram_bot.Service.UserService;
 import com.telegram_bot.inlineKeyboard.*;
 import com.telegram_bot.model.User;
@@ -13,13 +16,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 @Component
@@ -32,44 +29,18 @@ public class ChatBot extends TelegramLongPollingBot {
     @Value("${bot.token}")
     private String botToken;
 
-    private InlineKeyboardStart inlineKeyboardStart;
-    private InlineKeyboardCallName inlineKeyboardCallName;
-    private InlineKeyboardApprove inlineKeyboardApprove;
-    private InlineKeyboardStart2 inlineKeyboardStart2;
+    private SendStateMessageService sendStateMessageService;
+    private SendInlineKeyBoardMessageService sendInlineKeyBoardMessageService;
+    private ReplyKeyBoardMarkupService replyKeyBoardMarkupService;
     private InlineKeyboardEnd inlineKeyboardEnd;
     private InlineKeyboardDiraction inlineKeyboardDiraction;
     private InlineKeyboardAction inlineKeyboardAction;
     private InlineKeyboardOffice inlineKeyboardOffice;
     private InlineKeyboardAddress inlineKeyboardAddress;
     private InlineKeyboardRecruter inlineKeyboardRecruter;
-
-    private boolean keyBoardBoolean = false;
     private UserService userService;
 
-    @Autowired
-    public void setInlineKeyboardStart(InlineKeyboardStart inlineKeyboardStart) {
-        this.inlineKeyboardStart = inlineKeyboardStart;
-    }
 
-    @Autowired
-    public void setInlineKeyboardCallName(InlineKeyboardCallName inlineKeyboardCallName) {
-        this.inlineKeyboardCallName = inlineKeyboardCallName;
-    }
-
-    @Autowired
-    public void setInlineKeyboardApprove(InlineKeyboardApprove inlineKeyboardApprove) {
-        this.inlineKeyboardApprove = inlineKeyboardApprove;
-    }
-
-    @Autowired
-    public void setInlineKeyboardEnd(InlineKeyboardEnd inlineKeyboardEnd) {
-        this.inlineKeyboardEnd = inlineKeyboardEnd;
-    }
-
-    @Autowired
-    public void setInlineKeyboardStart2(InlineKeyboardStart2 inlineKeyboardStart2) {
-        this.inlineKeyboardStart2 = inlineKeyboardStart2;
-    }
 
     @Autowired
     public void setInlineKeyboardAction(InlineKeyboardAction inlineKeyboardAction) {
@@ -94,6 +65,26 @@ public class ChatBot extends TelegramLongPollingBot {
     @Autowired
     public void setInlineKeyboardRecruter(InlineKeyboardRecruter inlineKeyboardRecruter) {
         this.inlineKeyboardRecruter = inlineKeyboardRecruter;
+    }
+
+    @Autowired
+    public void setSendStateMessageService(SendStateMessageService sendStateMessageService) {
+        this.sendStateMessageService = sendStateMessageService;
+    }
+
+    @Autowired
+    public void setInlineKeyboardEnd(InlineKeyboardEnd inlineKeyboardEnd) {
+        this.inlineKeyboardEnd = inlineKeyboardEnd;
+    }
+
+    @Autowired
+    public void setSendInlineKeyBoardMessageService(SendInlineKeyBoardMessageService sendInlineKeyBoardMessageService) {
+        this.sendInlineKeyBoardMessageService = sendInlineKeyBoardMessageService;
+    }
+
+    @Autowired
+    public void setReplyKeyBoardMarkupService(ReplyKeyBoardMarkupService replyKeyBoardMarkupService) {
+        this.replyKeyBoardMarkupService = replyKeyBoardMarkupService;
     }
 
     @Autowired
@@ -140,11 +131,12 @@ public class ChatBot extends TelegramLongPollingBot {
                 state = ifReplyKey(update, state);
 
                 try {
-                    state = sendStateMessage(state, context, update);
+                    state = sendStateMessageService.sendStateMessage(state, context, update);
 
-                    if (keyBoardBoolean) {
-                        execute(sendInlineKeyBoardMessage(update.getMessage().getChatId(), state, context));
-                        keyBoardBoolean = false;
+                    if (sendStateMessageService.keyBoardBoolean) {
+                        execute(sendInlineKeyBoardMessageService
+                                .sendInlineKeyBoardMessage(update.getMessage().getChatId(), state, context));
+                        sendStateMessageService.keyBoardBoolean = false;
                     }
 
                 } catch (TelegramApiException e) {
@@ -171,25 +163,6 @@ public class ChatBot extends TelegramLongPollingBot {
         }
     }
 
-    private ReplyKeyboardMarkup replyButtons() {
-        ReplyKeyboardMarkup replyKeyboardMarkup;
-
-        KeyboardRow keyboardRow = new KeyboardRow();
-        keyboardRow.add(new KeyboardButton("Завершить работу с ботом"));
-        keyboardRow.add(new KeyboardButton("Меню"));
-
-        List<KeyboardRow> rowList = new ArrayList<>();
-        rowList.add(keyboardRow);
-
-        replyKeyboardMarkup = ReplyKeyboardMarkup.builder()
-                .selective(true)
-                .resizeKeyboard(true)
-                .keyboard(rowList)
-                .build();
-
-        return replyKeyboardMarkup;
-    }
-
     private BotState ifReplyKey(Update update, BotState state) {
 
         if (!update.hasCallbackQuery()) {
@@ -204,80 +177,6 @@ public class ChatBot extends TelegramLongPollingBot {
             }
         }
         return state;
-    }
-
-    private BotState sendStateMessage(BotState state,
-                                      BotContext context,
-                                      Update update) throws TelegramApiException {
-        ReplyKeyboardMarkup replyKeyboardMarkup = replyButtons();
-
-        if (state.equals(BotState.START)) {
-            inlineKeyboardStart.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-
-            state = context.getState();
-        }
-        if (state.equals(BotState.CALLNAME)) {
-            inlineKeyboardCallName.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        if (state.equals(BotState.APPROVED)) {
-            inlineKeyboardApprove.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-
-            state = context.getState();
-        }
-        if (state.equals(BotState.END)) {
-            inlineKeyboardEnd.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        if (state.equals(BotState.START2)) {
-            keyBoardBoolean = true;
-            inlineKeyboardStart2.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        if (state.equals(BotState.DIRACTION)) {
-            keyBoardBoolean = true;
-            inlineKeyboardDiraction.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        if (state.equals(BotState.ACTION)) {
-            keyBoardBoolean = true;
-            inlineKeyboardAction.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        if(state.equals(BotState.OFFICE)){
-            keyBoardBoolean = true;
-            inlineKeyboardOffice.handlerInlineKeyboard(update,context, replyKeyboardMarkup);
-        }
-        if (state.equals(BotState.ADDRESS)) {
-            keyBoardBoolean = true;
-            inlineKeyboardAddress.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        if(state.equals(BotState.RECRUTER)){
-            inlineKeyboardRecruter.handlerInlineKeyboard(update, context, replyKeyboardMarkup);
-        }
-        return state;
-    }
-
-    private SendMessage sendInlineKeyBoardMessage(long chatId, BotState state, BotContext context) {
-
-        SendMessage message = null;
-
-        if (state.equals(BotState.START2)) {
-
-            message = inlineKeyboardStart2.createInlineKeyBoard(chatId, context);
-        }
-        if (state.equals(BotState.DIRACTION)) {
-
-            message = inlineKeyboardDiraction.createInlineKeyBoard(chatId, context);
-        }
-        if (state.equals(BotState.ACTION)) {
-
-            message = inlineKeyboardAction.createInlineKeyBoard(chatId, context);
-        }
-        if(state.equals((BotState.OFFICE))){
-
-            message = inlineKeyboardOffice.createInlineKeyBoard(chatId, context);
-        }
-        if(state.equals(BotState.ADDRESS)){
-
-            message = inlineKeyboardAddress.createInlineKeyBoard(chatId, context);
-        }
-        return message;
     }
 
     private void handlerCallBackQuery(Update update, BotState state, BotContext context) throws TelegramApiException {
@@ -324,26 +223,26 @@ public class ChatBot extends TelegramLongPollingBot {
         }
 
         if (state == BotState.DIRACTION) {
-            inlineKeyboardDiraction.handlerInlineKeyboard(update, context, replyButtons());
-            execute(sendInlineKeyBoardMessage(chatId, state, context));
+            inlineKeyboardDiraction.handlerInlineKeyboard(update, context, replyKeyBoardMarkupService.replyButtons());
+            execute(sendInlineKeyBoardMessageService.sendInlineKeyBoardMessage(chatId, state, context));
         }
         if (state == BotState.ACTION) {
-            inlineKeyboardAction.handlerInlineKeyboard(update, context, replyButtons());
-            execute(sendInlineKeyBoardMessage(chatId, state, context));
+            inlineKeyboardAction.handlerInlineKeyboard(update, context, replyKeyBoardMarkupService.replyButtons());
+            execute(sendInlineKeyBoardMessageService.sendInlineKeyBoardMessage(chatId, state, context));
         }
         if(state == BotState.OFFICE){
-            inlineKeyboardOffice.handlerInlineKeyboard(update, context, replyButtons());
-            execute(sendInlineKeyBoardMessage(chatId, state, context));
+            inlineKeyboardOffice.handlerInlineKeyboard(update, context, replyKeyBoardMarkupService.replyButtons());
+            execute(sendInlineKeyBoardMessageService.sendInlineKeyBoardMessage(chatId, state, context));
         }
         if(state == BotState.ADDRESS){
-            inlineKeyboardAddress.handlerInlineKeyboard(update, context, replyButtons());
-            execute(sendInlineKeyBoardMessage(chatId, state, context));
+            inlineKeyboardAddress.handlerInlineKeyboard(update, context, replyKeyBoardMarkupService.replyButtons());
+            execute(sendInlineKeyBoardMessageService.sendInlineKeyBoardMessage(chatId, state, context));
         }
         if(state == BotState.RECRUTER){
-            inlineKeyboardRecruter.handlerInlineKeyboard(update, context, replyButtons());
+            inlineKeyboardRecruter.handlerInlineKeyboard(update, context, replyKeyBoardMarkupService.replyButtons());
         }
         if(state == BotState.END){
-            inlineKeyboardEnd.handlerInlineKeyboard(update,context,replyButtons());
+            inlineKeyboardEnd.handlerInlineKeyboard(update,context,replyKeyBoardMarkupService.replyButtons());
         }
     }
 }

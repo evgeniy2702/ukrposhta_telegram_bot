@@ -10,13 +10,8 @@ import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMar
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 @Component
-public class InlineKeyboardRecruter implements InlineKeyboardInterfase{
+public class InlineKeyboardRecruter implements HandlerInlineKeyboard{
 
-
-    @Override
-    public SendMessage createInlineKeyBoard(Long chatId, BotContext context) {
-        return null;
-    }
 
     @Override
     public void handlerInlineKeyboard(Update update, BotContext context, ReplyKeyboardMarkup replyKeyboardMarkup) throws TelegramApiException {

@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class InlineKeyboardAddress implements InlineKeyboardInterfase{
+public class InlineKeyboardAddress implements HandlerInlineKeyboard, CreateInlineKeyBoard{
 
     private AddressService addressService;
 
@@ -30,7 +30,6 @@ public class InlineKeyboardAddress implements InlineKeyboardInterfase{
     @Override
     public SendMessage createInlineKeyBoard(Long chatId, BotContext context) {
         InlineKeyboardMarkup inlineKeyboardMarkup;
-
 
         List<InlineKeyboardButton> row = new ArrayList<>();
         List<List<InlineKeyboardButton>> listRow = new ArrayList<>();

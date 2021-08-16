@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class InlineKeyboardDiraction implements InlineKeyboardInterfase {
+public class InlineKeyboardDiraction implements HandlerInlineKeyboard, CreateInlineKeyBoard {
 
     private RegionalDirectorateService regionalDirectorateService;
 

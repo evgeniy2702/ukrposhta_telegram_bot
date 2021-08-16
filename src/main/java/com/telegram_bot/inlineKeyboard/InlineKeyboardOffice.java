@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class InlineKeyboardOffice implements InlineKeyboardInterfase{
+public class InlineKeyboardOffice implements HandlerInlineKeyboard, CreateInlineKeyBoard{
 
     private RegionalDirectorateService regionalDirectorateService;
     private DocumentHRService documentHRService;

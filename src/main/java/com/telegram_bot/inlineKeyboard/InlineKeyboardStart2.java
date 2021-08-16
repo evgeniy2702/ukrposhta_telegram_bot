@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class InlineKeyboardStart2 implements InlineKeyboardInterfase{
+public class InlineKeyboardStart2 implements HandlerInlineKeyboard, CreateInlineKeyBoard{
 
     private MenuService menuService;
 

@@ -13,11 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class InlineKeyboardEnd implements InlineKeyboardInterfase{
-    @Override
-    public SendMessage createInlineKeyBoard(Long chatId, BotContext context) {
-        return null;
-    }
+public class InlineKeyboardEnd implements HandlerInlineKeyboard{
 
     @Override
     public void handlerInlineKeyboard(Update update, BotContext context, ReplyKeyboardMarkup replyKeyboardMarkup) throws TelegramApiException {

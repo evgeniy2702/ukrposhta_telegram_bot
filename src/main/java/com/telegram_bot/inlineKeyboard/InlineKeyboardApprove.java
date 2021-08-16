@@ -10,11 +10,7 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
 
 @Component
-public class InlineKeyboardApprove implements InlineKeyboardInterfase{
-    @Override
-    public SendMessage createInlineKeyBoard(Long chatId, BotContext context) {
-        return null;
-    }
+public class InlineKeyboardApprove implements HandlerInlineKeyboard{
 
     @Override
     public void handlerInlineKeyboard(Update update,
